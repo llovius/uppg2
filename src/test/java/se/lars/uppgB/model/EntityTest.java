@@ -34,5 +34,9 @@ class EntityTest {
 
     @org.junit.jupiter.api.Test
     void addDamage() {
+        Resident resident = new Resident(100,0,"Rese");
+        resident.setDamage(30);
+        resident.addDamage(10);
+        Assertions.assertEquals(40, resident.getDamage());
     }
 }

@@ -30,8 +30,9 @@ public class Game {
         livingroom();
         while (running && resident.isConscious()) {
             String userInput = getUserInput().toLowerCase();
-            running = processInput(userInput);
+            processInput(userInput);
         }
+        if (!resident.isConscious()) printRegret();
         scanner.close();
     }
 
@@ -41,21 +42,25 @@ public class Game {
             return;
         }
         //player och monster kan nås här eftersom de är klassattribut
-        executeAttack(resident,burglar);
+        executeAttack(resident, burglar);
         if (burglar.isConscious()) {
-            executeAttack(burglar,resident);
+            executeAttack(burglar, resident);
         }
     }
 
     private void printWelcomeMenu() {
-        System.out.println("Welcome to Adventure");
-        System.out.println("type go north quit etc");
+        System.out.println("***   Welcome to Adventure   ***\n");
+        System.out.println("You fallen to sleep at the usual place in the tv-couch in the living-room");
+        System.out.println("The living-room is the central room of your apartment and it is easy to crash there");
+        System.out.println("before entering your bedroom when you comes home through the hall. From the living-room");
+        System.out.println("you may also enter the kitchen and your home office.\n");
+        System.out.println("Suddenly you wake up of a load metallic crash in the hall. You open one eye and see a");
+        System.out.println("strange man in the kitchen searching in the pockets of your coat. Now you may choose:");
     }
 
     private void livingroom() {
         if (!currentLocatione.equals(LIVING_ROOM)) {
-            System.out.println("You are in the living room");
-            System.out.println("type go bedroom quit etc");
+            System.out.println("Living room: <go hall | go bedroom | go kitchen | go office>");
             currentLocatione = LIVING_ROOM;
         } else {
             System.out.println("You current position is already the living room - please try again");
@@ -65,7 +70,12 @@ public class Game {
     private void hall() {
         if (currentLocatione.equals(LIVING_ROOM)) {
             currentLocatione = HALL;
-            System.out.println("You are entering the hall. A nasty thief, You see...What's next");
+            System.out.println("You are entering the hall. A nasty thief is ");
+            if (burglar.isConscious()) {
+                System.out.println("searching the pockets of your coat. Enter the command: fight -if you dare...");
+            } else {
+                System.out.println("laying on the floor unconscious");
+            }
         } else {
             System.out.println("Illegal move -try again");
         }
@@ -75,30 +85,27 @@ public class Game {
         if (currentLocatione.equals(LIVING_ROOM)) {
             currentLocatione = KITCHEN;
             if (fryingPanFound) {
-                System.out.println("A kitchen with no frying pan...");
-            }
-            else {
-                System.out.println("A kitchen with a frying pan...");
-                System.out.println("Enter fetch frying pan to pick it up");
+                System.out.println("You run into the kitchen but you have already fetched the frying pan");
+            } else {
+                System.out.println("You run into the kitchen and see your frying pan near your stove");
+                System.out.println("Enter command: fetch frying pan -to pick it up");
             }
         } else {
             System.out.println("Illegal move -try again");
         }
     }
 
-    private void fetchFryingPan(){
+    private void fetchFryingPan() {
         if (!fryingPanFound) {
             if (currentLocatione.equals(KITCHEN)) {
                 System.out.println("You are fetching the frying pan from the kitchen and may now hit harder");
                 fryingPanFound = true;
                 // Öka spelarens damage när stekpannan plockas upp
                 resident.setDamage(resident.getDamage() + 3);
-            }
-            else {
+            } else {
                 System.out.println("There is no frying pan in this room?");
             }
-        }
-        else {
+        } else {
             System.out.println("You have already fetched the frying pan");
         }
     }
@@ -106,7 +113,7 @@ public class Game {
     private void bedroom() {
         if (currentLocatione.equals(LIVING_ROOM)) {
             currentLocatione = BEDROOM;
-            System.out.println("You are entering the bedroom. You see...What's next");
+            System.out.println("You are entering the bedroom. This will not help you in present state!");
         } else {
             System.out.println("Illegal move -try again");
         }
@@ -115,13 +122,16 @@ public class Game {
     private void office() {
         if (currentLocatione.equals(LIVING_ROOM)) {
             currentLocatione = OFFICE_ROOM;
-            System.out.println("You are in an office room. You see...What's next");
+            System.out.print("You are in your office room. You look around");
             //if (currentLocatione.equals(BURGLAR_LOCATION)) {
             //    System.out.println("A nasty monster! Type fight if you dare!?");
             //}
             if (!burglar.isConscious()) {
-                System.out.println("The burglar i unconscious and you see a telephone at the table");
-                System.out.println("to get help: call the police");
+                System.out.println(" and see a telephone at the table.");
+                System.out.println("The burglar lies unconscious in the hall.");
+                System.out.println("To get help, type: call the police");
+            } else {
+                System.out.println(" but see nothing hard to hit the burglar with.");
             }
         } else {
             System.out.println("Illegal move -try again");
@@ -134,21 +144,20 @@ public class Game {
                 System.out.print("You are calling the police while the burglar lies ");
                 System.out.println("unconscious on the floor of the hall");
                 System.out.println("CONGRATULATIONS! You won the game");
-                running =false;
-            }
-            else {
+                running = false;
+            } else {
                 System.out.println("The burglar is conscious!!!");
             }
-        }
-        else {
-            System.out.println("There is no phone in this room: "+currentLocatione);
+        } else {
+            System.out.println("There is no phone in this room: " + currentLocatione);
         }
     }
+
     private String getUserInput() {
         return scanner.nextLine();
     }
 
-    private boolean processInput(String input) {
+    private void processInput(String input) {
         switch (input) {
             case "go hall" -> hall();
             case "go bedroom" -> bedroom();
@@ -160,13 +169,12 @@ public class Game {
             case "fight" -> fightOneRound();
             case "quit" -> {
                 //returnera false för att avbryta, måsvingar behövs här
-                return false;
+                running = false;
             }
             default -> System.out.println("Bad input. Please try again.");
         }
-        //returnera true för att fortsätta spelet
-        return true;
     }
+
     void executeAttack(Entity attacker, Entity defender) {
         //       1. attacker attackerar defender (via metoden attack)
         attacker.punch(defender);
@@ -176,5 +184,10 @@ public class Game {
         } else {
             System.out.println(defender.getRole() + " is unconscious!");
         }
+    }
+
+    void printRegret(){
+        System.out.println("\n\nSorry Burje has left with your most valueful assets and is far away by now");
+        System.out.println("when you waking up having severe headache. Needless to say you lost... sorry!");
     }
 }
